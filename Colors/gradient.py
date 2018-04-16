@@ -62,13 +62,38 @@ def hsv2rgb(h, s, v):
     r, g, b = int(r * 255), int(g * 255), int(b * 255)
     return (r, g, b)
 
-def transition(value, maximum, start_point, end_point):
-    return start_point + (end_point - start_point)*value/maximum
+def hsv2rgbw(h, s, v):   # (hue, sat, val)
+    h = h % 360.0   # color scale is a circle
+    if v == 0:
+        return (0, 0, 0)
+    h = h / 60
+    section = h // 1
+    fraction = h - section
+    Mid_odd = v * (1-(s*fraction))
+    Mid_even = v * (1-s+(s*fraction))
+    m = v - v*s # m - amount to match value
+    if section == 0:
+        return v, Mid_even, m
+    elif section == 1:
+        return Mid_odd, v, m
+    elif section == 2:
+        return m, v, Mid_even
+    elif section == 3:
+        return m, Mid_odd, v
+    elif section == 4:
+        return Mid_even, m, v
+    elif section == 5:
+        return v, m, Mid_odd
+    return (-1, -1, -1)
 
-def transition3(value, maximum, s, e):
-    r = transition(value, maximum, s[0], e[0])
-    g = transition(value, maximum, s[1], e[1])
-    b = transition(value, maximum, s[2], e[2])
+
+def transition(value, start_point, end_point):
+    return start_point + (end_point - start_point)*value
+
+def transition3(value, s, e):
+    r = transition(value, s[0], e[0])
+    g = transition(value, s[1], e[1])
+    b = transition(value, s[2], e[2])
     return (r, g, b)
 
 def scaling(col_list, v):
@@ -83,65 +108,49 @@ def scaling(col_list, v):
     return(v, col_list[i-1], col_list[i])
 
 def gradient_rgb_bw(v):
-    #r , g, b = transition3(v, 1, [0,0,0],[1,1,1])
     color_list = [[0,0,0],[1,1,1]]
     v, rgb1, rgb2 = scaling(color_list, v)
-    r, g, b = transition3(v, 1, rgb1, rgb2)
-    return (r, g, b)
+    return transition3(v, rgb1, rgb2)
 
 def gradient_rgb_gbr(v):
-    if v<= 0.5:
-       r, g, b = transition3(v, 1, [0,1,0],[0,0,1])
-    else:
-        r, g, b = transition3((v-0.5) * 2, 1, [0,0,1],[1,0,0])         
-    return (r, g, b)
+    color_list = [[0,1,0],[0,0,1],[1,0,0]]
+    v, rgb1, rgb2 = scaling(color_list, v)
+    return transition3(v, rgb1, rgb2)    
             
 def gradient_rgb_gbr_full(v):
     color_list = [[0,1,0],[0,1,1],[0,0,1],[1,0,1],[1,0,0]]
-    if v<= 0.25:
-        r, g, b = transition3(v*4, 1, [0,1,0],[0,1,1])
-    elif v<= 0.5:
-        r, g, b = transition3((v-0.25)*4, 1, [0,1,1],[0,0,1])        
-    elif v<= 0.75:
-        r, g, b = transition3((v-0.5)*4, 1, [0,0,1],[1,0,1])
-    else:
-        r, g, b = transition3((v-0.75)*4, 1, [1,0,1],[1,0,0])
-    return (r, g, b)
-    
+    v, rgb1, rgb2 = scaling(color_list, v)
+    return transition3(v, rgb1, rgb2)
     
 def gradient_rgb_wb_custom(v):
-    [[1,1,1],[1,0,1],[0,0,1],[0,1,1],[0,1,0],[1,1,0],[1,0,0],[0,0,0]]
-    if v<= 0.25:
-        r, g, b = transition3(v*4, 1, [0,1,0],[0,1,1])
-    elif v<= 0.5:
-        r, g, b = transition3((v-0.25)*4, 1, [0,1,1],[0,0,1])        
-    elif v<= 0.75:
-        r, g, b = transition3((v-0.5)*4, 1, [0,0,1],[1,0,1])
-    else:
-        r, g, b = transition3((v-0.75)*4, 1, [1,0,1],[1,0,0])
-    return (r, g, b)
-    return (0, 0, 0)
-
+    color_list = [[1,1,1],[1,0,1],[0,0,1],[0,1,1],[0,1,0],[1,1,0],[1,0,0],[0,0,0]]
+    v, rgb1, rgb2 = scaling(color_list, v)
+    return transition3(v, rgb1, rgb2)
 
 def gradient_hsv_bw(v):
-    #TODO
-    return hsv2rgb(0, 0, 0)
-
+    color_list = [[0, 0, 0],[0, 0, 1]]
+    v, hsv1, hsv2 = scaling(color_list, v)
+    h, s, v = transition3(v, hsv1, hsv2)
+    return hsv2rgbw(h, s, v)
 
 def gradient_hsv_gbr(v):
-    #TODO
-    return hsv2rgb(0, 0, 0)
-
+    color_list = [[120,1,1],[180,1,1],[240,1,1],[300,1,1],[360,1,1]]
+    v, hsv1, hsv2 = scaling(color_list, v)
+    h, s, v = transition3(v, hsv1, hsv2)
+    return hsv2rgbw(h, s, v)
+        
 def gradient_hsv_unknown(v):
-    #TODO
-    return hsv2rgb(0, 0, 0)
-
+    color_list = [[120,0.5,1],[60,0.5,1],[0,0.5,1]]
+    v, hsv1, hsv2 = scaling(color_list, v)
+    h, s, v = transition3(v, hsv1, hsv2)
+    return hsv2rgbw(h, s, v)
 
 def gradient_hsv_custom(v):
-    #TODO
-    return hsv2rgb(0, 0, 0)
-
-
+    color_list = [[0,1,1],[120,0.9,1],[180,0.7,1],[240,0.5,1],[300,0.3,1],[310,0,1]]
+    v, hsv1, hsv2 = scaling(color_list, v)
+    h, s, v = transition3(v, hsv1, hsv2)
+    return hsv2rgbw(h, s, v)
+    
 if __name__ == '__main__':
     def toname(g):
         return g.__name__.replace('gradient_', '').replace('_', '-').upper()
