@@ -10,7 +10,15 @@ import math
 
 from matplotlib import colors
 
-#wczytywanie wys., szer., odgegł., i macierzy wysokości
+brightnes = 0.15            # <0.0 ; 0.5> im większe tym ciemniejszy cały obraz,    
+                            # pozwala na rozjaśnienie w funkcji adv_shadow_scale,   best = 0.15
+smp_shadow_scale = 0.2         # <0.0 ; 0.5> im większe tym mocniejsze cieniowanie,    best = 0.2
+adv_shadow_scale = 10       # < 1  ; 50 > im większe tym mocniejsze cieniowanie,    best = 10
+shadow_choise = "advance"    # "simply" - podstawowy "advance" - zaawansowany
+start_color = [120, 1, 1]   # kolor najnizszych czesci terenu
+end_color = [0, 1, 1]       # kolor najwyzszych czesci terenu
+
+
 def loadValues(name):
     with open(name, 'r') as plik: 
         matrix = plik.read().splitlines()
@@ -33,28 +41,7 @@ def transition3(value, st_pt, end_pt):
     val2 = transition(value, st_pt[1], end_pt[1])
     val3 = transition(value, st_pt[2], end_pt[2])
     return (val1, val2, val3)
-
-def simple_shadow(matrix_old_pt, matrix_curr_pt, v, shadow_scale):
-    if (matrix_old_pt > matrix_curr_pt):
-        v = v - shadow_scale
-        if v < 0: v = 0
-    return v
-
-def scaling_matrix(matrix, start_pt, end_pt, shadow_scale):
-    minimum = min([ min(element) for element in matrix])
-    maximum = max([ max(element) for element in matrix])
-    i = len(matrix)
-    j = len(matrix[0])
-    for row in range(i):
-        for column in range(j):
-            matrix[row][column] = (matrix[row][column] - minimum) / (maximum - minimum)
-            h, s, v = transition3(matrix[row][column], start_pt, end_pt)
-            if column != 0:
-                v = simple_shadow(matrix_old_pt, matrix[row][column], v, shadow_scale)
-            matrix_old_pt = matrix[row][column]            
-            matrix[row][column] = hsv2rgb(h, s, v)
-    return(matrix)
-
+    
 def hsv2rgb(hue, sat, val):
     hue60 = hue / 60.0
     hue60f = math.floor(hue60)
@@ -76,18 +63,58 @@ def hsv2rgb(hue, sat, val):
         r, g, b = t, p, val
     elif hueint == 5:
         r, g, b = val, p, q
-    return (r, g, b)  
+    return (r, g, b)    
+
+def set_shadow(matrix_old_pt, matrix_curr_pt, v):
+
+    if(shadow_choise == "simply"):
+        if (matrix_old_pt > matrix_curr_pt):
+            v = v - smp_shadow_scale
+            if v < 0: v = 0
+        return (v)
+        
+    elif(shadow_choise == "advance"):
+        v -= brightnes                          #bez tego nie mozna rozjasniac v bo przewaznie jest równy 1
+        diff = matrix_curr_pt - matrix_old_pt
+        v = v + diff * adv_shadow_scale
+        if v < 0: v = 0
+        if v > 1: v = 1
+        return (v)    
+    else:
+        print("zła nazwa cieniowania")
+
+def scaling_matrix(matrix, start_pt, end_pt):
+
+    minimum = min([ min(element) for element in matrix])
+    maximum = max([ max(element) for element in matrix])
+    i = len(matrix)         #wiersze
+    j = len(matrix[0])      #kolumny
     
+    for row in range(i):    
+        for column in range(j):
+        
+            matrix[row][column] = (matrix[row][column] - minimum) / (maximum - minimum)
+            h, s, v = transition3(matrix[row][column], start_pt, end_pt)
+            
+            #cieniowanie##############################################################                        
+            if column != 0:
+                v = set_shadow(matrix_old_pt, matrix[row][column], v)
+            matrix_old_pt = matrix[row][column]     #dla porównywania sąsiednich pikseli
+            ##########################################################################
+            
+            matrix[row][column] = hsv2rgb(h, s, v)
+            
+    return(matrix)
+
 def plot_map(matrix, height, width, name):
     rc('legend', fontsize=10)
     fig = plt.figure()
     plt.imshow(matrix, shape = (height, width, 3), aspect = 'auto')
     fig.savefig(name)
-    return(0, 0, 0, 0)
+    return(0)
         
 if __name__ == '__main__':
-    shadow_scale = 0.15
     matrix, height, width, dist = loadValues("big.dem")
-    matrix = scaling_matrix(matrix, [120, 1, 1], [0, 1, 1], shadow_scale)
+    matrix = scaling_matrix(matrix, start_color, end_color)
     plot_map(matrix, height, width, "my_map.pdf")
         
