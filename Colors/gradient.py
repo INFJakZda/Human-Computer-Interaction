@@ -10,6 +10,16 @@ import math
 
 from matplotlib import colors
 
+rgbBw = [[0,0,0],[1,1,1]]
+rgbGbr = [[0,1,0],[0,0,1],[1,0,0]]
+rgbGbrFull = [[0,1,0],[0,1,1],[0,0,1],[1,0,1],[1,0,0]]
+rgbWbCustom = [[1,1,1],[1,0,1],[0,0,1],[0,1,1],[0,1,0],[1,1,0],[1,0,0],[0,0,0]]
+# Lista punktów tworzących odcinki na stożku
+hsvBw = [[0,0,0],[0,0,1]]
+hsvGBR = [[120,1,1],[180,1,1],[240,1,1],[300,1,1],[360,1,1]]
+hsvUnknown = [[120,0.5,1],[60,0.5,1],[0,0.5,1]]
+hsvCustom = [[0,1,1],[120,0.9,1],[180,0.7,1],[240,0.5,1],[300,0.3,1],[310,0,1]]
+
 def plot_color_gradients(gradients, names):
     #For pretty latex fonts (commented out, because it does not work on some machines)
     #rc('text', usetex=True) 
@@ -108,46 +118,38 @@ def scaling(col_list, v):
     return(v, col_list[i-1], col_list[i])
 
 def gradient_rgb_bw(v):
-    color_list = [[0,0,0],[1,1,1]]
-    v, rgb1, rgb2 = scaling(color_list, v)
+    v, rgb1, rgb2 = scaling(rgbBw, v)
     return transition3(v, rgb1, rgb2)
 
 def gradient_rgb_gbr(v):
-    color_list = [[0,1,0],[0,0,1],[1,0,0]]
-    v, rgb1, rgb2 = scaling(color_list, v)
+    v, rgb1, rgb2 = scaling(rgbGbr, v)
     return transition3(v, rgb1, rgb2)    
             
 def gradient_rgb_gbr_full(v):
-    color_list = [[0,1,0],[0,1,1],[0,0,1],[1,0,1],[1,0,0]]
-    v, rgb1, rgb2 = scaling(color_list, v)
+    v, rgb1, rgb2 = scaling(rgbGbrFull, v)
     return transition3(v, rgb1, rgb2)
     
 def gradient_rgb_wb_custom(v):
-    color_list = [[1,1,1],[1,0,1],[0,0,1],[0,1,1],[0,1,0],[1,1,0],[1,0,0],[0,0,0]]
-    v, rgb1, rgb2 = scaling(color_list, v)
+    v, rgb1, rgb2 = scaling(gbrWbCustom, v)
     return transition3(v, rgb1, rgb2)
 
 def gradient_hsv_bw(v):
-    color_list = [[0, 0, 0],[0, 0, 1]]
-    v, hsv1, hsv2 = scaling(color_list, v)
+    v, hsv1, hsv2 = scaling(hsvBw, v)
     h, s, v = transition3(v, hsv1, hsv2)
     return hsv2rgbw(h, s, v)
 
 def gradient_hsv_gbr(v):
-    color_list = [[120,1,1],[180,1,1],[240,1,1],[300,1,1],[360,1,1]]
-    v, hsv1, hsv2 = scaling(color_list, v)
+    v, hsv1, hsv2 = scaling(hsvGbr, v)
     h, s, v = transition3(v, hsv1, hsv2)
     return hsv2rgbw(h, s, v)
         
 def gradient_hsv_unknown(v):
-    color_list = [[120,0.5,1],[60,0.5,1],[0,0.5,1]]
-    v, hsv1, hsv2 = scaling(color_list, v)
+    v, hsv1, hsv2 = scaling(hsvUnknown, v)
     h, s, v = transition3(v, hsv1, hsv2)
     return hsv2rgbw(h, s, v)
 
 def gradient_hsv_custom(v):
-    color_list = [[0,1,1],[120,0.9,1],[180,0.7,1],[240,0.5,1],[300,0.3,1],[310,0,1]]
-    v, hsv1, hsv2 = scaling(color_list, v)
+    v, hsv1, hsv2 = scaling(hsvCustom, v)
     h, s, v = transition3(v, hsv1, hsv2)
     return hsv2rgbw(h, s, v)
     
