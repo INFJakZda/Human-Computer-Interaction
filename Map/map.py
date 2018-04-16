@@ -14,7 +14,7 @@ brightnes = 0.15            # <0.0 ; 0.5> im większe tym ciemniejszy cały obra
                             # pozwala na rozjaśnienie w funkcji adv_shadow_scale,   best = 0.15
 smp_shadow_scale = 0.2         # <0.0 ; 0.5> im większe tym mocniejsze cieniowanie,    best = 0.2
 adv_shadow_scale = 10       # < 1  ; 50 > im większe tym mocniejsze cieniowanie,    best = 10
-shadow_choise = "advance"    # "simply" - podstawowy "advance" - zaawansowany
+shadow_choise = "advance"   # "simply" - podstawowy "advance" - zaawansowany
 start_color = [120, 1, 1]   # kolor najnizszych czesci terenu
 end_color = [0, 1, 1]       # kolor najwyzszych czesci terenu
 
@@ -65,13 +65,13 @@ def hsv2rgb(hue, sat, val):
         r, g, b = val, p, q
     return (r, g, b)    
 
-def set_shadow(matrix_old_pt, matrix_curr_pt, v):
+def set_shadow(matrix_old_pt, matrix_curr_pt, s, v):
 
     if(shadow_choise == "simply"):
         if (matrix_old_pt > matrix_curr_pt):
             v = v - smp_shadow_scale
             if v < 0: v = 0
-        return (v)
+        return (s, v)
         
     elif(shadow_choise == "advance"):
         v -= brightnes                          #bez tego nie mozna rozjasniac v bo przewaznie jest równy 1
@@ -79,7 +79,9 @@ def set_shadow(matrix_old_pt, matrix_curr_pt, v):
         v = v + diff * adv_shadow_scale
         if v < 0: v = 0
         if v > 1: v = 1
-        return (v)    
+        if (matrix_old_pt < matrix_curr_pt):
+            s = s - diff * (adv_shadow_scale / 2)
+        return (s, v)    
     else:
         print("zła nazwa cieniowania")
 
@@ -98,7 +100,7 @@ def scaling_matrix(matrix, start_pt, end_pt):
             
             #cieniowanie##############################################################                        
             if column != 0:
-                v = set_shadow(matrix_old_pt, matrix[row][column], v)
+                s, v = set_shadow(matrix_old_pt, matrix[row][column], s, v)
             matrix_old_pt = matrix[row][column]     #dla porównywania sąsiednich pikseli
             ##########################################################################
             
