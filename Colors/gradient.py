@@ -52,9 +52,6 @@ def plot_color_gradients(gradients, names):
     fig.savefig('my-gradients.pdf')
 
 def hsv2rgb(hue, sat, val):
-    hue = float(hue)
-    sat = float(sat)
-    val = float(val)
     hue60 = hue / 60.0
     hue60f = math.floor(hue60)
     hueint = int(hue60f) % 6
@@ -63,32 +60,42 @@ def hsv2rgb(hue, sat, val):
     q = val * (1 - frac * sat)
     t = val * (1 - (1 - frac) * sat)
     r, g, b = 0, 0, 0
-    if hueint == 0: r, g, b = val, t, p
-    elif hueint == 1: r, g, b = q, val, p
-    elif hueint == 2: r, g, b = p, val, t
-    elif hueint == 3: r, g, b = p, q, val
-    elif hueint == 4: r, g, b = t, p, val
-    elif hueint == 5: r, g, b = val, p, q
+    if hueint == 0:
+        r, g, b = val, t, p
+    elif hueint == 1:
+        r, g, b = q, val, p
+    elif hueint == 2:
+        r, g, b = p, val, t
+    elif hueint == 3:
+        r, g, b = p, q, val
+    elif hueint == 4:
+        r, g, b = t, p, val
+    elif hueint == 5:
+        r, g, b = val, p, q
     return (r, g, b)    
 
 def transition(value, start_point, end_point):
-    return start_point + (end_point - start_point)*value
+    return start_point + ( (end_point - start_point) * value )
 
-def transition3(value, s, e):
-    r = transition(value, s[0], e[0])
-    g = transition(value, s[1], e[1])
-    b = transition(value, s[2], e[2])
-    return (r, g, b)
+def transition3(value, st_pt, end_pt):
+    val1 = transition(value, st_pt[0], end_pt[0])
+    val2 = transition(value, st_pt[1], end_pt[1])
+    val3 = transition(value, st_pt[2], end_pt[2])
+    return (val1, val2, val3)
 
 def scaling(col_list, v):
-    i = 1
+    i = 1                       #iterator
     list_len = len(col_list) - 1
+    
     while(i <= list_len):
+        
         if(v <= (i / (list_len) ) ):
-            v = (v - ((i - 1)/list_len) ) * list_len;
+            v = (v - ( (i - 1)/list_len) ) * list_len;
             break
+            
         else:
-            i = i + 1
+            i += 1
+            
     return(v, col_list[i-1], col_list[i])
 
 def gradient_rgb_bw(v):
