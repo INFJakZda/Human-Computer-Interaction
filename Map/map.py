@@ -25,6 +25,21 @@ def loadValues(name):
             matrix[i][j] = float(matrix[i][j])
     return(matrix, height, width, dist)
 
+def transition(value, start_point, end_point):
+    return start_point + ( (end_point - start_point) * value )
+
+def transition3(value, st_pt, end_pt):
+    val1 = transition(value, st_pt[0], end_pt[0])
+    val2 = transition(value, st_pt[1], end_pt[1])
+    val3 = transition(value, st_pt[2], end_pt[2])
+    return (val1, val2, val3)
+
+def simple_shadow(matrix_old_pt, matrix_curr_pt, v, shadow_scale):
+    if (matrix_old_pt > matrix_curr_pt):
+        v = v - shadow_scale
+        if v < 0: v = 0
+    return v
+
 def scaling_matrix(matrix, start_pt, end_pt, shadow_scale):
     minimum = min([ min(element) for element in matrix])
     maximum = max([ max(element) for element in matrix])
@@ -35,11 +50,8 @@ def scaling_matrix(matrix, start_pt, end_pt, shadow_scale):
             matrix[row][column] = (matrix[row][column] - minimum) / (maximum - minimum)
             h, s, v = transition3(matrix[row][column], start_pt, end_pt)
             if column != 0:
-                if (old < (matrix[row][column])):
-                    v = v + shadow_scale
-                    if v > 1:
-                        v = 1
-            old = matrix[row][column]            
+                v = simple_shadow(matrix_old_pt, matrix[row][column], v, shadow_scale)
+            matrix_old_pt = matrix[row][column]            
             matrix[row][column] = hsv2rgb(h, s, v)
     return(matrix)
 
@@ -66,15 +78,6 @@ def hsv2rgb(hue, sat, val):
         r, g, b = val, p, q
     return (r, g, b)  
     
-def transition(value, start_point, end_point):
-    return start_point + (end_point - start_point)*value
-
-def transition3(value, s, e):
-    r = transition(value, s[0], e[0])
-    g = transition(value, s[1], e[1])
-    b = transition(value, s[2], e[2])
-    return (r, g, b)      
-    
 def plot_map(matrix, height, width, name):
     rc('legend', fontsize=10)
     fig = plt.figure()
@@ -83,9 +86,8 @@ def plot_map(matrix, height, width, name):
     return(0, 0, 0, 0)
         
 if __name__ == '__main__':
+    shadow_scale = 0.15
     matrix, height, width, dist = loadValues("big.dem")
-    matrix = scaling_matrix(matrix, [120, 1, 1], [0, 1, 1], 0.3)
+    matrix = scaling_matrix(matrix, [120, 1, 1], [0, 1, 1], shadow_scale)
     plot_map(matrix, height, width, "my_map.pdf")
-    
-    
-    
+        
